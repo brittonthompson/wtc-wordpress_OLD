@@ -72,11 +72,11 @@ RUN a2enmod rewrite expires actions proxy_http
 
 VOLUME /var/www/html
 
-ENV WORDPRESS_VERSION latest
+ENV WORDPRESS_VERSION=latest
 # full path to your git repo if you already have a site
-ENV WORDPRESS_SOURCE_REPO
+ENV WORDPRESS_SOURCE_REPO=""
 # this is your git repo private key
-ENV WORDPRESS_SOURCE_REPO_KEY
+ENV WORDPRESS_SOURCE_REPO_KEY=""
 #ENV WORDPRESS_SHA1 65913a39b2e8990ece54efbfa8966fc175085794
 
 RUN set -ex; \
