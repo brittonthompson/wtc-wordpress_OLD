@@ -21,7 +21,6 @@ RUN set -ex; \
 		mysqli \
 		opcache \
 		zip \
-		curl \
 		xml \
 		mbstring \
 		soap \
