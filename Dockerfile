@@ -81,7 +81,7 @@ ENV WORDPRESS_SOURCE_REPO_KEY=""
 
 RUN set -ex; \
 	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
-	WORDPRESS_SHA1=`curl https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz.sha1 2>/dev/null`
+	WORDPRESS_SHA1=`curl https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz.sha1 2>/dev/null` \
 	echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
 # upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
 	tar -xzf wordpress.tar.gz -C /usr/src/; \
