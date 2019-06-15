@@ -24,7 +24,6 @@ RUN set -ex; \
 		curl \
 		xml \
 		mbstring \
-		mcrypt \
 		soap \
 		memcached \
 	; \
