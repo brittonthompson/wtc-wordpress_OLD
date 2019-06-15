@@ -25,7 +25,6 @@ RUN set -ex; \
 		xml \
 		mbstring \
 		soap \
-		memcached \
 	; \
 	pecl install imagick-3.4.4; \
 	docker-php-ext-enable imagick; \
