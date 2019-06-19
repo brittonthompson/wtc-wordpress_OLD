@@ -11,6 +11,7 @@ RUN set -ex; \
 		libmagickwand-dev \
 		libpng-dev \
 		libzip-dev \
+		git \
 	; \
 	\
 	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
