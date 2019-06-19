@@ -78,12 +78,25 @@ ENV WORDPRESS_SOURCE_REPO_KEY=""
 #ENV WORDPRESS_SHA1 65913a39b2e8990ece54efbfa8966fc175085794
 
 RUN set -ex; \
-	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
-	WORDPRESS_SHA1=`curl https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz.sha1 2>/dev/null`; \
-	echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
-# upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
-	tar -xzf wordpress.tar.gz -C /usr/src/; \
-	rm wordpress.tar.gz; \
+	if [ ! -z "$WORDPRESS_SOURCE_REPO" ] && [ ! -z "$WORDPRESS_SOURCE_REPO_KEY" ]; then \
+		# make sure we have a .ssh directory for the private key
+		if [ ! -e ~/.ssh ]; then \
+			mkdir ~/.ssh \
+		fi \
+		# create the private key from our env and clone the repo
+		echo $WORDPRESS_SOURCE_REPO_KEY > ~/.ssh/id_rsa \
+		chmod 400 ~/.ssh/id_rsa \
+		git clone $WORDPRESS_SOURCE_REPO wordpress \
+		# remove the private key since we no longer need it
+		rm -f ~/.ssh/id_rsa \
+	elif \
+		curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
+		WORDPRESS_SHA1=`curl https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz.sha1 2>/dev/null`; \
+		echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
+		# upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
+		tar -xzf wordpress.tar.gz -C /usr/src/; \
+		rm wordpress.tar.gz; \
+	fi \
 	chown -R www-data:www-data /usr/src/wordpress
 
 COPY docker-entrypoint.sh /usr/local/bin/
