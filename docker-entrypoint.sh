@@ -45,7 +45,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		group="$(id -g)"
 	fi
 
-	if [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ -z $WORDPRESS_SOURCE_REPO ]; then
+	if [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ -z "$WORDPRESS_SOURCE_REPO" ]; then
 		# if the directory exists and WordPress doesn't appear to be installed AND the permissions of it are root:root, let's chown it (likely a Docker-created directory)
 		if [ "$(id -u)" = '0' ] && [ "$(stat -c '%u:%g' .)" = '0:0' ]; then
 			chown "$user:$group" .
@@ -87,7 +87,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 			EOF
 			chown "$user:$group" .htaccess
 		fi
-	elif [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ ! -z $WORDPRESS_SOURCE_REPO ] && [ ! -z $WORDPRESS_SOURCE_REPO_KEY ]; then
+	elif [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ ! -z "$WORDPRESS_SOURCE_REPO" ] && [ ! -z "$WORDPRESS_SOURCE_REPO_KEY" ]; then
 		# if a git repo is defined in environment variables we pull down the data instead of using a clean copy of wordpress
 		# if the directory exists and WordPress doesn't appear to be installed AND the permissions of it are root:root, let's chown it (likely a Docker-created directory)
 		if [ "$(id -u)" = '0' ] && [ "$(stat -c '%u:%g' .)" = '0:0' ]; then
