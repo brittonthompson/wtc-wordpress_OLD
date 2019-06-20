@@ -99,6 +99,10 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 			echo >&2 "WARNING: $PWD is not empty! (copying anyhow)"
 		fi
 
+		# install git just for the clone
+		apt update
+		apt install -y git
+
 		# make sure we have a .ssh directory for the private key
 		if [ ! -e ~/.ssh ]; then
 			mkdir ~/.ssh
