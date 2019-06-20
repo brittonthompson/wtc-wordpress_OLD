@@ -113,14 +113,15 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		git config --global user.name "WTC Entrypoint"
 
 		# create the private key from our env and clone the repo
-		echo "$WORDPRESS_SOURCE_REPO_KEY"
-		echo $WORDPRESS_SOURCE_REPO_KEY >> ~/.ssh/id_rsa
+		echo "$WORDPRESS_SOURCE_REPO_KEY" > ~/.ssh/id_rsa
 		chmod 0400 ~/.ssh/id_rsa
-		echo "StrictHostKeyChecking no"  > ~/.ssh/config
-		echo "Host git.websitetotalcare.com"  >> ~/.ssh/config
-		echo "  User git"  >> ~/.ssh/config
-		echo "  IdentityFile ~/.ssh/id_rsa"  >> ~/.ssh/config
-
+		{
+			echo "StrictHostKeyChecking no"
+			echo "Host git.websitetotalcare.com"
+			echo "  User git"
+			echo "  IdentityFile ~/.ssh/id_rsa"
+		} > ~/.ssh/config
+		ls
 		git clone $WORDPRESS_SOURCE_REPO .
 		
 		echo >&2 "Complete! WordPress has been successfully cloned to $PWD"
