@@ -6,7 +6,7 @@ RUN set -ex; \
 	savedAptMark="$(apt-mark showmanual)"; \
 	\
 	apt-get update; \
-	apt-get install -y git \
+	apt-get install -y git; \
 	apt-get install -y --no-install-recommends \
 		libjpeg-dev \
 		libmagickwand-dev \
