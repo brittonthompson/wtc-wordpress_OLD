@@ -126,8 +126,11 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		
 		echo >&2 "Complete! WordPress has been successfully cloned to $PWD"
 
-		# remove the private key since we no longer need it
+		# cleanup
 		rm ~/.ssh/id_rsa
+		rm ~/.ssh/config
+		apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+		rm -rf /var/lib/apt/lists/*
 
 		if [ ! -e .htaccess ]; then
 			# NOTE: The "Indexes" option is disabled in the php:apache base image
