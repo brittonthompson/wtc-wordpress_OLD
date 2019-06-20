@@ -113,8 +113,8 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		git config --global user.name "WTC Entrypoint"
 
 		# create the private key from our env and clone the repo
-		echo $WORDPRESS_SOURCE_REPO_KEY
-		echo $WORDPRESS_SOURCE_REPO_KEY > ~/.ssh/id_rsa
+		echo "$WORDPRESS_SOURCE_REPO_KEY"
+		echo $WORDPRESS_SOURCE_REPO_KEY >> ~/.ssh/id_rsa
 		chmod 0400 ~/.ssh/id_rsa
 		echo "StrictHostKeyChecking no"  > ~/.ssh/config
 		echo "Host git.websitetotalcare.com"  >> ~/.ssh/config
