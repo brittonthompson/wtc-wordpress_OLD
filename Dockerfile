@@ -6,12 +6,12 @@ RUN set -ex; \
 	savedAptMark="$(apt-mark showmanual)"; \
 	\
 	apt-get update; \
+	apt-get install -y git \
 	apt-get install -y --no-install-recommends \
 		libjpeg-dev \
 		libmagickwand-dev \
 		libpng-dev \
 		libzip-dev \
-		git \
 	; \
 	\
 	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \

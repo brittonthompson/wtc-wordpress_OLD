@@ -105,12 +105,12 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		fi
 
 		echo "Setting fake values for git config..."
-		/usr/bin/git config --global user.email wtc@entrypoint.com
-		/usr/bin/git config --global user.name "WTC Entrypoint"
+		git config --global user.email wtc@entrypoint.com
+		git config --global user.name "WTC Entrypoint"
 
 		# create the private key from our env and clone the repo
 		echo $WORDPRESS_SOURCE_REPO_KEY > ~/.ssh/id_rsa
-		/usr/bin/git clone $WORDPRESS_SOURCE_REPO .
+		git clone $WORDPRESS_SOURCE_REPO .
 		
 		echo >&2 "Complete! WordPress has been successfully cloned to $PWD"
 
