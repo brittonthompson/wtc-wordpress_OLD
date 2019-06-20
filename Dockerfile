@@ -11,6 +11,7 @@ RUN set -ex; \
 		libmagickwand-dev \
 		libpng-dev \
 		libzip-dev \
+		git \
 	; \
 	\
 	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
@@ -80,7 +81,7 @@ RUN set -ex; \
 	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
 	WORDPRESS_SHA1=`curl https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz.sha1 2>/dev/null`; \
 	echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
-# upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
+	# upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
 	tar -xzf wordpress.tar.gz -C /usr/src/; \
 	rm wordpress.tar.gz; \
 	chown -R www-data:www-data /usr/src/wordpress
