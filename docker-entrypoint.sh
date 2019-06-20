@@ -117,7 +117,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		chmod 0400 ~/.ssh/id_rsa
 		{
 			echo "StrictHostKeyChecking no"
-			echo "Host git.websitetotalcare.com"
+			echo "Host $WORDPRESS_SOURCE_HOST"
 			echo "  User git"
 			echo "  IdentityFile ~/.ssh/id_rsa"
 		} > ~/.ssh/config
