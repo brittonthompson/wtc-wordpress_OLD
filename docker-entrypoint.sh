@@ -45,7 +45,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		group="$(id -g)"
 	fi
 
-	if [ ! -e index.php ] && [ ! -e wp-includes/version.php ]; then
+	if [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ -z "$WORDPRESS_SOURCE_REPO" ]; then
 		# if the directory exists and WordPress doesn't appear to be installed AND the permissions of it are root:root, let's chown it (likely a Docker-created directory)
 		if [ "$(id -u)" = '0' ] && [ "$(stat -c '%u:%g' .)" = '0:0' ]; then
 			chown "$user:$group" .
@@ -87,7 +87,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 			EOF
 			chown "$user:$group" .htaccess
 		fi
-	elif [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ ! -z $WORDPRESS_SOURCE_REPO ] && [ ! -z $WORDPRESS_SOURCE_REPO_KEY ]; then
+	elif [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ ! -z "$WORDPRESS_SOURCE_REPO" ] && [ ! -z "$WORDPRESS_SOURCE_REPO_KEY" ]; then
 		# if a git repo is defined in environment variables we pull down the data instead of using a clean copy of wordpress
 		# if the directory exists and WordPress doesn't appear to be installed AND the permissions of it are root:root, let's chown it (likely a Docker-created directory)
 		if [ "$(id -u)" = '0' ] && [ "$(stat -c '%u:%g' .)" = '0:0' ]; then
@@ -99,6 +99,10 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 			echo >&2 "WARNING: $PWD is not empty! (copying anyhow)"
 		fi
 
+		# install git just for the clone
+		apt update
+		apt install -y git
+
 		# make sure we have a .ssh directory for the private key
 		if [ ! -e ~/.ssh ]; then
 			mkdir ~/.ssh
@@ -109,17 +113,28 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		fi
 
 		echo "Setting fake values for git config..."
-		/usr/bin/git config --global user.email wtc@entrypoint.com
-		/usr/bin/git config --global user.name "WTC Entrypoint"
+		git config --global user.email wtc@entrypoint.com
+		git config --global user.name "WTC Entrypoint"
 
 		# create the private key from our env and clone the repo
-		echo $WORDPRESS_SOURCE_REPO_KEY > ~/.ssh/id_rsa
-		/usr/bin/git clone $WORDPRESS_SOURCE_REPO .
+		echo "$WORDPRESS_SOURCE_REPO_KEY" > ~/.ssh/id_rsa
+		chmod 0400 ~/.ssh/id_rsa
+		{
+			echo "StrictHostKeyChecking no"
+			echo "Host $WORDPRESS_SOURCE_HOST"
+			echo "  User git"
+			echo "  IdentityFile ~/.ssh/id_rsa"
+		} > ~/.ssh/config
+		ls
+		git clone $WORDPRESS_SOURCE_REPO .
 		
 		echo >&2 "Complete! WordPress has been successfully cloned to $PWD"
 
-		# remove the private key since we no longer need it
+		# cleanup
 		rm ~/.ssh/id_rsa
+		rm ~/.ssh/config
+		apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+		rm -rf /var/lib/apt/lists/*
 
 		if [ ! -e .htaccess ]; then
 			# NOTE: The "Indexes" option is disabled in the php:apache base image
