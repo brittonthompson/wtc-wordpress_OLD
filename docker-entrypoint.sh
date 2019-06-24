@@ -104,6 +104,10 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 			mkdir ~/.ssh
 		fi
 
+		if [ -e "lost+found" ]; then
+			rm -rf "lost+found"
+		fi
+
 		echo "Setting fake values for git config..."
 		/usr/bin/git config --global user.email wtc@entrypoint.com
 		/usr/bin/git config --global user.name "WTC Entrypoint"
