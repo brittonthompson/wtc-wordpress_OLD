@@ -210,7 +210,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		: "${WORDPRESS_DB_COLLATE:=}"
 
 		# if there's a wp-config-sample.php start with a new wp-config.php since we're changing platforms
-		if [ -e wp-config.php ] && [ -e wp-config-sample.php ]; then
+		if [ -e wp-config.php ] && [ -e wp-config-sample.php ] && [ ! -e wp-config.php.bak ]; then
 			mv wp-config.php wp-config.php.bak
 		fi
 
