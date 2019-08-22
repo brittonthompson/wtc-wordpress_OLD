@@ -91,7 +91,8 @@ COPY docker-entrypoint.sh /usr/local/bin/
 COPY uploads.ini /usr/local/etc/php/conf.d/
 
 RUN chmod 777 /usr/local/bin/docker-entrypoint.sh \
-    && ln -s /usr/local/bin/docker-entrypoint.sh /
+    && ln -s /usr/local/bin/docker-entrypoint.sh / \
+    && ln -s /usr/local/bin/uploads.ini /
     
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
