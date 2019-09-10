@@ -11,19 +11,17 @@ RUN set -ex; \
 		libmagickwand-dev \
 		libpng-dev \
 		libzip-dev \
+		sendmail \
 	; \
 	\
 	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
-	docker-php-ext-install \
+	docker-php-ext-install -j "$(nproc)" \
 		bcmath \
 		exif \
 		gd \
 		mysqli \
 		opcache \
 		zip \
-		xml \
-		mbstring \
-		soap \
 	; \
 	pecl install imagick-3.4.4; \
 	docker-php-ext-enable imagick; \
@@ -50,11 +48,12 @@ RUN { \
 		echo 'opcache.max_accelerated_files=4000'; \
 		echo 'opcache.revalidate_freq=2'; \
 		echo 'opcache.fast_shutdown=1'; \
-		echo 'opcache.enable_cli=1'; \
 	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
-# https://codex.wordpress.org/Editing_wp-config.php#Configure_Error_Logging
+# https://wordpress.org/support/article/editing-wp-config-php/#configure-error-logging
 RUN { \
-		echo 'error_reporting = 4339'; \
+# https://www.php.net/manual/en/errorfunc.constants.php
+# https://github.com/docker-library/wordpress/issues/420#issuecomment-517839670
+		echo 'error_reporting = E_ERROR | E_WARNING | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_RECOVERABLE_ERROR'; \
 		echo 'display_errors = Off'; \
 		echo 'display_startup_errors = Off'; \
 		echo 'log_errors = On'; \
@@ -65,34 +64,39 @@ RUN { \
 		echo 'html_errors = Off'; \
 	} > /usr/local/etc/php/conf.d/error-logging.ini
 
-RUN a2enmod rewrite expires actions proxy_http
+RUN set -eux; \
+	a2enmod rewrite expires; \
+	\
+# https://httpd.apache.org/docs/2.4/mod/mod_remoteip.html
+	a2enmod remoteip; \
+	{ \
+		echo 'RemoteIPHeader X-Forwarded-For'; \
+# these IP ranges are reserved for "private" use and should thus *usually* be safe inside Docker
+		echo 'RemoteIPTrustedProxy 10.0.0.0/8'; \
+		echo 'RemoteIPTrustedProxy 172.16.0.0/12'; \
+		echo 'RemoteIPTrustedProxy 192.168.0.0/16'; \
+		echo 'RemoteIPTrustedProxy 169.254.0.0/16'; \
+		echo 'RemoteIPTrustedProxy 127.0.0.0/8'; \
+	} > /etc/apache2/conf-available/remoteip.conf; \
+	a2enconf remoteip; \
+# https://github.com/docker-library/wordpress/issues/383#issuecomment-507886512
+# (replace all instances of "%h" with "%a" in LogFormat)
+	find /etc/apache2 -name '*.conf' -exec sed -ri 's/([[:space:]]*LogFormat[[:space:]]+"[^"]*)%h([^"]*")/\1%a\2/g' '{}' +
 
 VOLUME /var/www/html
 
-ENV WORDPRESS_VERSION=latest
-# full path to your git repo if you already have a site
-ENV WORDPRESS_SOURCE_REPO=""
-# source host - i.e., github.com
-ENV WORDPRESS_SOURCE_HOST=""
-# this is your git repo private key
-ENV WORDPRESS_SOURCE_REPO_KEY=""
-#ENV WORDPRESS_SHA1 65913a39b2e8990ece54efbfa8966fc175085794
+ENV WORDPRESS_VERSION 5.2.3
+ENV WORDPRESS_SHA1 5efd37148788f3b14b295b2a9bf48a1a467aa303
 
 RUN set -ex; \
 	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
-	WORDPRESS_SHA1=`curl https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz.sha1 2>/dev/null`; \
 	echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
-	# upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
+# upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
 	tar -xzf wordpress.tar.gz -C /usr/src/; \
 	rm wordpress.tar.gz; \
 	chown -R www-data:www-data /usr/src/wordpress
 
 COPY docker-entrypoint.sh /usr/local/bin/
-COPY uploads.ini /usr/local/etc/php/conf.d/
 
-RUN chmod 777 /usr/local/bin/docker-entrypoint.sh \
-    && ln -s /usr/local/bin/docker-entrypoint.sh / \
-    && ln -s /usr/local/bin/uploads.ini /
-    
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]

@@ -45,7 +45,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		group="$(id -g)"
 	fi
 
-	if [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ -z "$WORDPRESS_SOURCE_REPO" ]; then
+	if [ ! -e index.php ] && [ ! -e wp-includes/version.php ]; then
 		# if the directory exists and WordPress doesn't appear to be installed AND the permissions of it are root:root, let's chown it (likely a Docker-created directory)
 		if [ "$(id -u)" = '0' ] && [ "$(stat -c '%u:%g' .)" = '0:0' ]; then
 			chown "$user:$group" .
@@ -87,74 +87,8 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 			EOF
 			chown "$user:$group" .htaccess
 		fi
-	elif [ ! -e index.php ] && [ ! -e wp-includes/version.php ] && [ ! -z "$WORDPRESS_SOURCE_REPO" ] && [ ! -z "$WORDPRESS_SOURCE_REPO_KEY" ]; then
-		# if a git repo is defined in environment variables we pull down the data instead of using a clean copy of wordpress
-		# if the directory exists and WordPress doesn't appear to be installed AND the permissions of it are root:root, let's chown it (likely a Docker-created directory)
-		if [ "$(id -u)" = '0' ] && [ "$(stat -c '%u:%g' .)" = '0:0' ]; then
-			chown "$user:$group" .
-		fi
-
-		echo >&2 "WordPress not found in $PWD - cloning $WORDPRESS_SOURCE_REPO now..."
-		if [ -n "$(ls -A)" ]; then
-			echo >&2 "WARNING: $PWD is not empty! (copying anyhow)"
-		fi
-
-		# install git just for the clone
-		apt update
-		apt install -y git
-
-		# make sure we have a .ssh directory for the private key
-		if [ ! -e ~/.ssh ]; then
-			mkdir ~/.ssh
-		fi
-
-		if [ -e "lost+found" ]; then
-			rm -rf "lost+found"
-		fi
-
-		echo "Setting fake values for git config..."
-		git config --global user.email wtc@entrypoint.com
-		git config --global user.name "WTC Entrypoint"
-
-		# create the private key from our env and clone the repo
-		echo "$WORDPRESS_SOURCE_REPO_KEY" > ~/.ssh/id_rsa
-		chmod 0400 ~/.ssh/id_rsa
-		{
-			echo "StrictHostKeyChecking no"
-			echo "Host $WORDPRESS_SOURCE_HOST"
-			echo "  User git"
-			echo "  IdentityFile ~/.ssh/id_rsa"
-		} > ~/.ssh/config
-		ls
-		git clone $WORDPRESS_SOURCE_REPO .
-		
-		echo >&2 "Complete! WordPress has been successfully cloned to $PWD"
-
-		# cleanup
-		rm ~/.ssh/id_rsa
-		rm ~/.ssh/config
-		apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
-		rm -rf /var/lib/apt/lists/*
-
-		if [ ! -e .htaccess ]; then
-			# NOTE: The "Indexes" option is disabled in the php:apache base image
-			cat > .htaccess <<-'EOF'
-				# BEGIN WordPress
-				<IfModule mod_rewrite.c>
-				RewriteEngine On
-				RewriteBase /
-				RewriteRule ^index\.php$ - [L]
-				RewriteCond %{REQUEST_FILENAME} !-f
-				RewriteCond %{REQUEST_FILENAME} !-d
-				RewriteRule . /index.php [L]
-				</IfModule>
-				# END WordPress
-			EOF
-		fi
-
-		# we have the set permissions on all the files since our clone may have changed this
-		chown -R "$user:$group" .
 	fi
+
 	# allow any of these "Authentication Unique Keys and Salts." to be specified via
 	# environment variables with a "WORDPRESS_" prefix (ie, "WORDPRESS_AUTH_KEY")
 	uniqueEnvs=(
@@ -208,11 +142,6 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		: "${WORDPRESS_DB_NAME:=wordpress}"
 		: "${WORDPRESS_DB_CHARSET:=utf8}"
 		: "${WORDPRESS_DB_COLLATE:=}"
-
-		# if there's a wp-config-sample.php start with a new wp-config.php since we're changing platforms
-		if [ -e wp-config.php ] && [ -e wp-config-sample.php ] && [ ! -e wp-config.php.bak ]; then
-			mv wp-config.php wp-config.php.bak
-		fi
 
 		# version 4.4.1 decided to switch to windows line endings, that breaks our seds and awks
 		# https://github.com/docker-library/wordpress/issues/116
