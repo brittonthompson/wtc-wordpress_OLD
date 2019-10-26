@@ -1,0 +1,4 @@
+# localhost
+127.0.0.0/8             trusted
+[::ffff:127.0.0.0]/104  trusted
+[::1]/128               trusted
